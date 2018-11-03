@@ -8,3 +8,8 @@ body, html {
   height: 100%;
   overflow: hidden;
 }
+
+.home {
+  background: #fff;
+  color: #000;
+}
