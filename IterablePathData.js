@@ -75,6 +75,73 @@ define(function() {
       }
       return segments;
     },
+    get guaranteesBaseCommands() {
+      if (typeof this.source === 'string') {
+        return !/[ahqstv]/i.test(this.source);
+      }
+      return false;
+    },
+    get asBaseCommands() {
+      if (this.guaranteesBaseCommands) {
+        return this;
+      }
+      const self = this;
+      var iter = new IterablePathData(function*() {
+        for (var step of self) {
+          switch (step.type) {
+            case 'A':
+              throw new Error('NYI');
+              break;
+            case 'a':
+              throw new Error('NYI');
+              break;
+            case 'H':
+              throw new Error('NYI');
+              break;
+            case 'h':
+              throw new Error('NYI');
+              break;
+            case 'V':
+              throw new Error('NYI');
+              break;
+            case 'v':
+              throw new Error('NYI');
+              break;
+            case 'S':
+              throw new Error('NYI');
+              break;
+            case 's':
+              throw new Error('NYI');
+              break;
+            case 'Q':
+              throw new Error('NYI');
+              break;
+            case 'q':
+              throw new Error('NYI');
+              break;
+            case 'T':
+              throw new Error('NYI');
+              break;
+            case 't':
+              throw new Error('NYI');
+              break;
+            default: yield step;
+          }
+        }
+      });
+      Object.defineProperty(iter, 'guaranteesBaseCommands', {
+        value: true,
+      });
+      if (this.guaranteesOneSegment) {
+        Object.defineProperty(iter, 'guaranteesOneSegment', {
+          value: true,
+        });
+      }
+      Object.defineProperty(this, 'asBaseCommands', {
+        value: iter,
+      });
+      return iter;
+    },
     get guaranteesAbsolute() {
       if (typeof this.source === 'string') {
         return !/[a-z]/.test(this.source);
@@ -85,7 +152,7 @@ define(function() {
       if (this.guaranteesAbsolute) return this;
       const self = this;
       var iter = new IterablePathData(function*() {
-        var x=0, y=0, x0=0, y0=0;
+        var x=0, y=0, x0=0, y0=0, mx=0, my=0;
         for (var step of self) {
           switch (step.type) {
             case 'M':
@@ -118,13 +185,17 @@ define(function() {
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 2) {
                 newValues.push(
-                  x += step.values[i];
+                  x += step.values[i],
                   y += step.values[i+1]);
               }
               yield {type:'L', values:newValues};
               break;
             case 'c':
-              throw new Error('NYI');
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 6) {
+                
+              }
+              yield {type:'C', values:newValues};
               break;
             case 's':
               throw new Error('NYI');
