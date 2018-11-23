@@ -298,12 +298,12 @@ define(function() {
               yield step;
               continue;
             case 'c':
-              for (var i = 4; i < step.values; i += 6) {
-                x += step.values[i];
-                y += step.values[i+1];
+              for (var i = 0; i < step.values.length; i += 6) {
+                hx = x + step.values[i+2];
+                hy = y + step.values[i+3];
+                x += step.values[i+4];
+                y += step.values[i+5];
               }
-              hx = x;
-              hy = y;
               yield step;
               continue;
             case 'A':
