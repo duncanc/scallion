@@ -151,7 +151,54 @@ define(function() {
         return this;
       }
       else {
+        const source = this.source;
         iter = new IterablePathData(function*() {
+          var paramCount;
+          for (var step of source) {
+            switch (step.type) {
+              case 'z': case 'Z': yield step; continue;
+              case 'm': case 'M':
+                if (step.values.length === 2) {
+                  yield step;
+                }
+                else {
+                  yield {type:step.type, values:step.values.slice(0, 2)};
+                  var type = step.type === 'm' ? 'l' : 'L';
+                  for (var i = 2; i < step.values.length; i += 2) {
+                    yield {type:type, values:step.values.slice(i, i+2)};
+                  }
+                }
+                continue;
+              case 'l': case 'L': case 't': case 'T':
+                paramCount = 2;
+                break;
+              case 'h': case 'H': case 'v': case 'V':
+                paramCount = 1;
+                break;
+              case 's': case 'S': case 'q': case 'Q':
+                paramCount = 4;
+                break;
+              case 'c': case 'C':
+                paramCount = 6;
+                break;
+              case 'a': case 'A':
+                paramCount = 7;
+                break;
+              default:
+                throw new Error('unknown command: ' + step.type);
+            }
+            if (paramCount === step.values.length) {
+              yield step;
+            }
+            else {
+              for (var i = 0; i < step.values.length; i += paramCount) {
+                yield {
+                  type: step.type,
+                  values: step.values.slice(i, i+paramCount),
+                };
+              }
+            }
+          }
         });
       }
       Object.defineProperty(this, 'asSimpleParams', {
