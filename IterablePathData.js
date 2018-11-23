@@ -13,9 +13,64 @@ define(function() {
       .map(function(v) {
         return {
           type: v[0],
-          values: v.slice(1).trim().split(/[\s,]+/g).map(parseFloat)
+          values: v
+            .slice(1)
+            .trim()
+            .split(/[\s,]+/g)
+            .map(parseFloat),
         };
       });
+  }
+  
+  const RX_NUM = /(?:[\+\-]?\s*(?:\d+(?:\.\d*)?|\.\d+)\s*(?:,\s*)?)/g;
+  const RX_COMPLEX_PARAMS = new RegExp([
+    '[mlt]\\s*' + RX_NUM.source + '{3,}',
+    '[hv]\\s*' + RX_NUM.source + '{2,}',
+    '[sq]\\s*' + RX_NUM.source + '{5,}',
+    '[c]\\s*' + RX_NUM.source + '{7,}',
+    '[a]\\s*' + RX_NUM.source + '{8,}',
+  ].join('|'), 'gi');
+  
+  function toSimpleParams(str) {
+    return str.replace(RX_COMPLEX_PARAMS, function(a) {
+      var command = a[0];
+      var paramCount;
+      switch (command) {
+        case 'm':
+          command = 'l';
+          paramCount = 2;
+          break;
+        case 'M':
+          command = 'L';
+          paramCount = 2;
+          break;
+        case 'l': case 'L': case 't': case 'T':
+          paramCount = 2;
+          break;
+        case 'h': case 'H': case 'v': case 'V':
+          paramCount = 1;
+          break;
+        case 's': case 'S': case 'q': case 'Q':
+          paramCount = 4;
+          break;
+        case 'c': case 'C':
+          paramCount = 6;
+          break;
+        case 'a': case 'A':
+          paramCount = 7;
+          break;
+        default:
+          throw new Error('unknown command: ' + command);
+      }
+      var p = 0;
+      return a.replace(RX_NUM, function(num) {
+        if (p++ === paramCount) {
+          num = command + num;
+          p = 0;
+        }
+        return num;
+      });
+    });
   }
   
   function IterablePathData(source) {
@@ -50,7 +105,7 @@ define(function() {
       }
       return false;
     },
-    getSegments: function() {
+    toSegments: function() {
       if (this.guaranteesOneSegment) return [this];
       var source = this.source;
       if (typeof source === 'string') {
@@ -74,6 +129,35 @@ define(function() {
         currentSteps.push(step);
       }
       return segments;
+    },
+    get guaranteesSimpleParams() {
+      if (typeof this.source === 'string') {
+        return this === this.asSimpleParams;
+      }
+      return false;
+    },
+    get asSimpleParams() {
+      var iter;
+      if (typeof this.source === 'string') {
+        var simplified = toSimpleParams(this.source);
+        if (simplified === this.source) {
+          iter = this;
+        }
+        else {
+          iter = new IterablePathData(simplified);
+        }
+      }
+      else if (this.guaranteesSimpleParams) {
+        return this;
+      }
+      else {
+        iter = new IterablePathData(function*() {
+        });
+      }
+      Object.defineProperty(this, 'asSimpleParams', {
+        value: iter,
+      });
+      return iter;
     },
     get guaranteesBaseCommands() {
       if (typeof this.source === 'string') {
