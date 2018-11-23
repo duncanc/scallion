@@ -38,11 +38,11 @@ define(function() {
       if (typeof this.source === 'string') {
         return this.source;
       }
-      var src = [];
-      for (var step of this) {
-        src.push(step.type + step.values.join(' '));
+      var buf = [];
+      for (var step of this.source) {
+        buf.push(step.type + step.values.join(' '));
       }
-      return src.join('');
+      return buf.join('');
     },
     get guaranteesOneSegment() {
       if (typeof this.source === 'string') {
