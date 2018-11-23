@@ -62,9 +62,9 @@ define(function() {
         default:
           throw new Error('unknown command: ' + command);
       }
-      var p = 0;
+      var p = -1;
       return a.replace(RX_NUM, function(num) {
-        if (p++ === paramCount) {
+        if (++p === paramCount) {
           num = command + num;
           p = 0;
         }
