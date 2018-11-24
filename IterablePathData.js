@@ -220,26 +220,54 @@ define(function() {
         for (var step of source) {
           switch (step.type) {
             case 'S':
-              throw new Error('NYI');
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 4) {
+                newValues.push(x + x - cx, y + y - cy);
+                newValues.push(
+                  cx = step.values[i],
+                  cy = step.values[i+1],
+                  x = step.values[i+2],
+                  y = step.values[i+3]);
+              }
+              qx = x;
+              qy = y;
+              yield {type:'C', values:newValues};
               continue;
             case 's':
               throw new Error('NYI');
               continue;
             case 'T':
-              throw new Error('NYI');
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                newValues.push(
+                  qx = x + x - qx,
+                  qy = y + y - qy);
+                newValues.push(
+                  x = step.values[i],
+                  y = step.values[i+1]);
+              }
+              cx = x;
+              cy = y;
+              yield {type:'Q', values:newValues};
               continue;
             case 't':
               throw new Error('NYI');
               continue;
               
             case 'C':
-              throw new Error('NYI');
+              qx = x = step.values[step.values.length-2];
+              qy = y = step.values[step.values.length-1];
+              cx = step.values[step.values.length-4];
+              cy = step.values[step.values.length-3];
               break;
             case 'c':
               throw new Error('NYI');
               break;
             case 'Q':
-              throw new Error('NYI');
+              cx = x = step.values[step.values.length-2];
+              cy = y = step.values[step.values.length-1];
+              qx = step.values[step.values.length-4];
+              qy = step.values[step.values.length-3];
               break;
             case 'q':
               throw new Error('NYI');
