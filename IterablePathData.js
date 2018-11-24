@@ -74,6 +74,9 @@ define(function() {
   }
   
   function IterablePathData(source) {
+    if (typeof source === 'function') {
+      source = source();
+    }
     if (Symbol.iterator in source) {
       this.source = source;
     }
