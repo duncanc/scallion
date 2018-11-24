@@ -234,7 +234,23 @@ define(function() {
               yield {type:'C', values:newValues};
               continue;
             case 's':
-              throw new Error('NYI');
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 4) {
+                newValues.push(
+                  x - cx,
+                  y - cy,
+                  step.values[i],
+                  step.values[i+1],
+                  step.values[i+2],
+                  step.values[i+3]);
+                cx = x + step.values[i];
+                cy = y + step.values[i+1];
+                x += step.values[i+2];
+                y += step.values[i+3];
+              }
+              qx = x;
+              qy = y;
+              yield {type:'c', values:newValues};
               continue;
             case 'T':
               var newValues = [];
@@ -251,26 +267,54 @@ define(function() {
               yield {type:'Q', values:newValues};
               continue;
             case 't':
-              throw new Error('NYI');
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                newValues.push(
+                  x - qx,
+                  y - qy,
+                  step.values[i],
+                  step.values[i+1]);
+                qx = x + x - qx;
+                qy = y + y - qy;
+                x += step.values[0];
+                y += step.values[1];
+              }
+              cx = x;
+              cy = y;
+              yield {type:'q', values:newValues};
               continue;
               
             case 'C':
-              qx = x = step.values[step.values.length-2];
-              qy = y = step.values[step.values.length-1];
               cx = step.values[step.values.length-4];
               cy = step.values[step.values.length-3];
+              qx = x = step.values[step.values.length-2];
+              qy = y = step.values[step.values.length-1];
               break;
             case 'c':
-              throw new Error('NYI');
+              for (var i = 0; i < step.values.length; i += 6) {
+                cx = x + step.values[i+2];
+                cy = y + step.values[i+3];
+                x += step.values[i+4];
+                y += step.values[i+5];
+              }
+              qx = x;
+              qy = y;
               break;
             case 'Q':
-              cx = x = step.values[step.values.length-2];
-              cy = y = step.values[step.values.length-1];
               qx = step.values[step.values.length-4];
               qy = step.values[step.values.length-3];
+              cx = x = step.values[step.values.length-2];
+              cy = y = step.values[step.values.length-1];
               break;
             case 'q':
-              throw new Error('NYI');
+              for (var i = 0; i < step.values.length; i += 4) {
+                qx = x + step.values[i];
+                qy = y + step.values[i+1];
+                x += step.values[i+2];
+                y += step.values[i+3];
+              }
+              cx = x;
+              cy = y;
               break;
             
             case 'M':
