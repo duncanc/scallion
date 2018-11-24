@@ -206,6 +206,16 @@ define(function() {
       });
       return iter;
     },
+    get guaranteesNoReflectedHandles() {
+      if (typeof this.source === 'string') {
+        return !/[st]/i.test(this.source);
+      }
+      return false;
+    },
+    get asNoReflectedHandles() {
+      if (this.guaranteesNoReflectedHandles) return this;
+      throw new Error('NYI');
+    },
     get guaranteesBaseCommands() {
       if (typeof this.source === 'string') {
         return !/[ahqstv]/i.test(this.source);
