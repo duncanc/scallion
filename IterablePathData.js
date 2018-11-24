@@ -73,11 +73,16 @@ define(function() {
     });
   }
   
+  const PROP_SELF = {
+    get: function(){ return this; },
+  };
+  
   function IterablePathData(source) {
     if (typeof source === 'function') {
-      source = source();
+      this[Symbol.iterator] = source;
+      Object.defineProperty(this, 'source', PROP_SELF);
     }
-    if (Symbol.iterator in source) {
+    else if (Symbol.iterator in source) {
       this.source = source;
     }
     else {
