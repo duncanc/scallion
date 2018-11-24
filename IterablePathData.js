@@ -85,6 +85,157 @@ define(function() {
     get: function(){ return this; },
   };
   
+  function PathState() {
+  }
+  PathState.prototype = {
+    x0:0, y0:0,
+    x:0, y:0,
+    qx:0, qy:0,
+    cx:0, cy:0,
+    update: function(step) {
+      switch (step.type) {
+        case 'M':
+          this.x0 = this.qx = this.cx = this.x = step.values[step.values.length - 2];
+          this.y0 = this.qy = this.cy = this.y = step.values[step.values.length - 1];
+          break;
+        case 'm':
+          var dx = 0, dy = 0;
+          for (var i = 0; i < step.values.length; i += 2) {
+            dx += step.values[i];
+            dy += step.values[i+1];
+          }
+          this.x0 = this.qx = this.cx = this.x += dx;
+          this.y0 = this.qy = this.cy = this.y += dy;
+          break;
+        case 'z': case 'Z':
+          this.qx = this.cx = this.x = this.x0;
+          this.qy = this.cy = this.y = this.y0;
+          break;
+        case 'A':
+        case 'L':
+          this.qx = this.cx = this.x = step.values[step.values.length - 2];
+          this.qy = this.cy = this.y = step.values[step.values.length - 1];
+          break;
+        case 'a':
+          var dx = 0, dy = 0;
+          for (var i = 0; i < step.values.length; i += 7) {
+            dx += step.values[i+5];
+            dy += step.values[i+6];
+          }
+          this.qx = this.cx = this.x += dx;
+          this.qy = this.cy = this.y += dy;
+          break;
+        case 'l':
+          var dx = 0, dy = 0;
+          for (var i = 0; i < step.values.length; i += 2) {
+            dx += step.values[i];
+            dy += step.values[i+1];
+          }
+          this.qx = this.cx = this.x += dx;
+          this.qy = this.cy = this.y += dy;
+          break;
+        case 'H':
+          this.qx = this.cx = this.x = step.values[step.values.length-1];
+          break;
+        case 'h':
+          var dx = 0;
+          for (var i = 0; i < step.values.length; i++) {
+            dx += step.values[i];
+          }
+          this.qx = this.cx = this.x += dx;
+          break;
+        case 'V':
+          this.qy = this.cy = this.y = step.values[step.values.length-1];
+          break;
+        case 'v':
+          var dy = 0;
+          for (var i = 0; i < step.values.length; i++) {
+            dy += step.values[i];
+          }
+          this.qy = this.cy = this.y += dy;
+          break;
+        case 'C':
+        case 'S':
+          this.cx = step.values[step.values.length - 4];
+          this.cy = step.values[step.values.length - 3];
+          this.qx = this.x = step.values[step.values.length - 2];
+          this.qy = this.y = step.values[step.values.length - 1];
+          break;
+        case 'c':
+          var x = this.x, y = this.y, cx, cy;
+          for (var i = 0; i < step.values.length; i += 6) {
+            cx = x + step.values[i+2];
+            cy = y + step.values[i+3];
+            x += step.values[i+4];
+            y += step.values[i+5];
+          }
+          this.cx = cx;
+          this.cy = cy;
+          this.qx = this.x = x;
+          this.qy = this.y = y;
+          break;
+        case 's':
+          var x = this.x, y = this.y, cx, cy;
+          for (var i = 0; i < step.values.length; i += 4) {
+            cx = x + step.values[i];
+            cy = y + step.values[i+1];
+            x += step.values[i+2];
+            y += step.values[i+3];
+          }
+          this.cx = cx;
+          this.cy = cy;
+          this.qx = this.x = x;
+          this.qy = this.y = y;
+          break;
+        case 'Q':
+          this.qx = step.values[step.values.length - 4];
+          this.qy = step.values[step.values.length - 3];
+          this.cx = this.x = step.values[step.values.length - 2];
+          this.cy = this.y = step.values[step.values.length - 1];
+          break;
+        case 'q':
+          var x = this.x, y = this.y, qx, qy;
+          for (var i = 0; i < step.values.length; i += 4) {
+            qx = x + step.values[i];
+            qy = y + step.values[i+1];
+            x += step.values[i+2];
+            y += step.values[i+3];
+          }
+          this.qx = qx;
+          this.qy = qy;
+          this.cx = this.x = x;
+          this.cy = this.y = y;
+          break;
+        case 'T':
+          var x = this.x, y = this.y, qx = this.qx, qy = this.qy;
+          for (var i = 0; i < step.values.length; i += 2) {
+            qx = x + x - qx;
+            qy = y + y - qy;
+            x = step.values[i];
+            y = step.values[i+1];
+          }
+          this.qx = qx;
+          this.qy = qy;
+          this.cx = this.x = x;
+          this.cy = this.y = y;
+          break;
+        case 't':
+          var x = this.x, y = this.y, qx = this.qx, qy = this.qy;
+          for (var i = 0; i < step.values.length; i += 2) {
+            qx = x + x - qx;
+            qy = y + y - qy;
+            x += step.values[i];
+            y += step.values[i+1];
+          }
+          this.qx = qx;
+          this.qy = qy;
+          this.cx = this.x = x;
+          this.cy = this.y = y;
+          break;
+      }
+    },
+  };
+  
   function IterablePathData(source) {
     if (typeof source === 'function') {
       this[Symbol.iterator] = source;
@@ -232,24 +383,24 @@ define(function() {
       if (this.guaranteesUnreflected) return this;
       const source = this;
       var iter = new IterablePathData(function*() {
-        var x=0,y=0, x0=0,y0=0, cx=0,cy=0, qx=0,qy=0;
+        var state = new PathState;
         for (var step of source) {
           switch (step.type) {
             case 'S':
+              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 4) {
-                newValues.push(x + x - cx, y + y - cy);
+                newValues.push(x + x-cx, y + y-cy);
                 newValues.push(
                   cx = step.values[i],
                   cy = step.values[i+1],
                   x = step.values[i+2],
                   y = step.values[i+3]);
               }
-              qx = x;
-              qy = y;
               yield {type:'C', values:newValues};
-              continue;
+              break;
             case 's':
+              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 4) {
                 newValues.push(
@@ -264,11 +415,10 @@ define(function() {
                 x += step.values[i+2];
                 y += step.values[i+3];
               }
-              qx = x;
-              qy = y;
               yield {type:'c', values:newValues};
-              continue;
+              break;
             case 'T':
+              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 2) {
                 newValues.push(
@@ -278,11 +428,10 @@ define(function() {
                   x = step.values[i],
                   y = step.values[i+1]);
               }
-              cx = x;
-              cy = y;
               yield {type:'Q', values:newValues};
-              continue;
+              break;
             case 't':
+              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 2) {
                 newValues.push(
@@ -295,101 +444,13 @@ define(function() {
                 x += step.values[0];
                 y += step.values[1];
               }
-              cx = x;
-              cy = y;
               yield {type:'q', values:newValues};
-              continue;
-              
-            case 'C':
-              cx = step.values[step.values.length-4];
-              cy = step.values[step.values.length-3];
-              qx = x = step.values[step.values.length-2];
-              qy = y = step.values[step.values.length-1];
               break;
-            case 'c':
-              for (var i = 0; i < step.values.length; i += 6) {
-                cx = x + step.values[i+2];
-                cy = y + step.values[i+3];
-                x += step.values[i+4];
-                y += step.values[i+5];
-              }
-              qx = x;
-              qy = y;
-              break;
-            case 'Q':
-              qx = step.values[step.values.length-4];
-              qy = step.values[step.values.length-3];
-              cx = x = step.values[step.values.length-2];
-              cy = y = step.values[step.values.length-1];
-              break;
-            case 'q':
-              for (var i = 0; i < step.values.length; i += 4) {
-                qx = x + step.values[i];
-                qy = y + step.values[i+1];
-                x += step.values[i+2];
-                y += step.values[i+3];
-              }
-              cx = x;
-              cy = y;
-              break;
-            
-            case 'M':
-              x0 = step.values[0];
-              y0 = step.values[1];
-              qx = cx = x = step.values[step.values.length-2];
-              qy = cy = y = step.values[step.values.length-1];
-              break;
-            case 'm':
-              x0 = x += step.values[0];
-              y0 = y += step.values[1];
-              for (var i = 2; i < step.values.length; i += 2) {
-                x += step.values[i];
-                y += step.values[i+1];
-              }
-              qx = cx = x;
-              qy = cy = y;
-              break;
-            case 'Z':
-            case 'z':
-              qx = cx = x = x0;
-              qy = cy = y = y0;
-              break;
-            case 'L':
-              qx = cx = x = step.values[step.values.length-2];
-              qy = cy = y = step.values[step.values.length-1];
-              break;
-            case 'l':
-              for (var i = 0; i < step.values.length; i += 2) {
-                x += step.values[i];
-                y += step.values[i+1];
-              }
-              qx = cx = x;
-              qy = cy = y;
-              break;
-            case 'H':
-              qx = cx = x = step.values[step.values.length-1];
-              qy = cy = y;
-              break;
-            case 'h':
-              for (var i = 0; i < step.values.length; i++) {
-                x += step.values[i];
-              }
-              qx = cx = x;
-              qy = cy = y;
-              break;
-            case 'V':
-              qx = cx = x;
-              qy = cy = y = step.values[step.values.length-1];
-              break;
-            case 'v':
-              for (var i = 0; i < step.values.length; i++) {
-                y += step.values[i];
-              }
-              qx = cx = x;
-              qy = cy = y;
+            default:
+              yield step;
               break;
           }
-          yield step;
+          state.update(step);
         }
       });
       Object.defineProperty(this, 'asUnreflected', {
