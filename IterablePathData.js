@@ -2,6 +2,14 @@ define(function() {
 
   'use strict';
   
+  function quadraticToCubic(x0,y0, qx,qy, x1,y1) {
+    return [
+      x0 + 2 * (qx - x0) / 3,
+      y0 + 2 * (qy - y0) / 3,
+      x1 + 2 * (qx - x1) / 3,
+      y1 + 2 * (qy - y1) / 3];
+  }
+  
   function splitPathSegments(str) {
     return str.match(/m[^m]*/gi);
   }
