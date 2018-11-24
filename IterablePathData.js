@@ -222,7 +222,7 @@ define(function() {
     },
     get asUnreflected() {
       if (this.guaranteesUnreflected) return this;
-      const source = this.source;
+      const source = this;
       var iter = new IterablePathData(function*() {
         var x=0,y=0, x0=0,y0=0, cx=0,cy=0, qx=0,qy=0;
         for (var step of source) {
@@ -389,6 +389,53 @@ define(function() {
       });
       return iter;
     },
+    get guaranteesCubicOnly() {
+      if (typeof this.source === 'string') {
+        return !/[aqt]/i.test(this.source);
+      }
+      return false;
+    },
+    get asCubicOnly() {
+      if (this.guaranteesCubicOnly) return this;
+      const self = this;
+      var iter = new IterablePathData(function*() {
+        for (var step of self) {
+          switch (step.type) {
+            case 'M':
+              break;
+            case 'm':
+              break;
+            case 'L':
+              break;
+            case 'l':
+              break;
+            case 'C':
+              break;
+            case 'c':
+              break;
+            case 'S':
+              break;
+            case 's':
+              break;
+            case 'z':
+            case 'Z':
+              break;
+            case 'Q':
+              continue;
+            case 'q':
+              continue;
+          }
+          yield step;
+        }
+      });
+      Object.defineProperty(this, 'asCubicOnly', {
+        value: iter,
+      });
+      Object.defineProperty(iter, 'guaranteesCubicOnly', {
+        value: true,
+      });
+      return iter;
+    },
     get guaranteesBaseCommands() {
       if (typeof this.source === 'string') {
         return !/[ahqstv]/i.test(this.source);
@@ -520,11 +567,6 @@ define(function() {
       Object.defineProperty(iter, 'guaranteesBaseCommands', {
         value: true,
       });
-      if (this.guaranteesOneSegment) {
-        Object.defineProperty(iter, 'guaranteesOneSegment', {
-          value: true,
-        });
-      }
       Object.defineProperty(this, 'asBaseCommands', {
         value: iter,
       });
@@ -540,7 +582,7 @@ define(function() {
       if (this.guaranteesAbsolute) return this;
       const self = this;
       var iter = new IterablePathData(function*() {
-        var x=0, y=0, x0=0, y0=0, mx=0, my=0;
+        var x=0,y=0, x0=0,y0=0, cx=0,cy=0, qx=0,qy=0;
         for (var step of self) {
           switch (step.type) {
             case 'M':
@@ -628,11 +670,6 @@ define(function() {
       Object.defineProperty(iter, 'guaranteesAbsolute', {
         value: true,
       });
-      if (this.guaranteesOneSegment) {
-        Object.defineProperty(iter, 'guaranteesOneSegment', {
-          value: true,
-        });
-      }
       Object.defineProperty(this, 'asAbsolute', {
         value: iter,
       });
