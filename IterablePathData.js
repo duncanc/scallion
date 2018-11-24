@@ -651,89 +651,75 @@ define(function() {
       if (this.guaranteesAbsolute) return this;
       const self = this;
       var iter = new IterablePathData(function*() {
-        var x=0,y=0, x0=0,y0=0, cx=0,cy=0, qx=0,qy=0;
+        var state = new PathState;
         for (var step of self) {
           switch (step.type) {
-            case 'M':
-              x0 = x = step.values[step.values.length-2];
-              y0 = y = step.values[step.values.length-1];
-              yield step;
-              break;
-            case 'm':
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i += 2) {
-                newValues.push(
-                  x += step.values[step.values.length-2],
-                  y += step.values[step.values.length-1]);
-              }
-              x0 = newValues[0];
-              y0 = newValues[1];
-              yield {type:'M', values:newValues};
-              break;
-            case 'Z': case 'z':
-              x = x0;
-              y = y0;
-              yield step.type === 'Z' ? step : {type:'Z', values:step.values};
-              break;
-            case 'L': case 'C': case 'S': case 'Q': case 'T': case 'A':
-              x = step.values[step.values.length-2];
-              y = step.values[step.values.length-1];
-              yield step;
-              break;
             case 'l':
+            case 'm':
+            case 't':
+              var x = state.x, y = state.y;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 2) {
                 newValues.push(
                   x += step.values[i],
                   y += step.values[i+1]);
               }
-              yield {type:'L', values:newValues};
+              yield {
+                type: step.type.toUpperCase(),
+                values: newValues,
+              };
+              break;
+            case 'q':
+              var x = state.x, y = state.y;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                newValues.push(
+                  x + step.values[i],
+                  y + step.values[i+1]);
+                newValues.push(
+                  x += step.values[i+2],
+                  y += step.values[i+3]);
+              }
+              yield {type:'Q', values:newValues};
               break;
             case 'c':
+              var x = state.x, y = state.y;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 6) {
-                
+                newValues.push(
+                  x + step.values[i],
+                  y + step.values[i+1],
+                  x + step.values[i+2],
+                  y + step.values[i+3]);
+                newValues.push(
+                  x += step.values[i+4],
+                  y += step.values[i+5]);
               }
               yield {type:'C', values:newValues};
               break;
-            case 's':
-              throw new Error('NYI');
-              break;
-            case 'q':
-              throw new Error('NYI');
-              break;
-            case 't':
-              throw new Error('NYI');
-              break;
             case 'a':
-              throw new Error('NYI');
-              break;
-            case 'H':
-              x = step.values[step.values.length-1];
-              yield step;
-              break;
-            case 'V':
-              x = step.values[step.values.length-1];
-              yield step;
-              break;
-            case 'h':
+              var x = state.x, y = state.y;
               var newValues = [];
-              for (var i = 0; i < step.values.length; i++) {
-                newValues.push(x += step.values[i]);
+              for (var i = 0; i < step.values.length; i += 7) {
+                newValues.push(
+                  step.values[i],
+                  step.values[i+1],
+                  step.values[i+2],
+                  step.values[i+3],
+                  step.values[i+4],
+                  x += step.values[i+5],
+                  y += step.values[i+6]);
               }
-              yield {type:'H', values:newValues};
+              yield {type:'A', values:newValues};
               break;
-            case 'v':
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i++) {
-                newValues.push(y += step.values[i]);
-              }
-              yield {type:'V', values:newValues};
+            case 'z':
+              yield {type:'Z'};
               break;
             default:
-              throw new Error('unknown path step type: ' + step.type);
+              yield step;
               break;
           }
+          state.update(step);
         }
       });
       Object.defineProperty(iter, 'guaranteesAbsolute', {
