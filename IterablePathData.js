@@ -206,15 +206,108 @@ define(function() {
       });
       return iter;
     },
-    get guaranteesNoReflectedHandles() {
+    get guaranteesUnreflected() {
       if (typeof this.source === 'string') {
         return !/[st]/i.test(this.source);
       }
       return false;
     },
-    get asNoReflectedHandles() {
-      if (this.guaranteesNoReflectedHandles) return this;
-      throw new Error('NYI');
+    get asUnreflected() {
+      if (this.guaranteesUnreflected) return this;
+      const source = this.source;
+      var iter = new IterablePathData(function*() {
+        var x=0,y=0, x0=0,y0=0, cx=0,cy=0, qx=0,qy=0;
+        for (var step of source) {
+          switch (step.type) {
+            case 'S':
+              throw new Error('NYI');
+              continue;
+            case 's':
+              throw new Error('NYI');
+              continue;
+            case 'T':
+              throw new Error('NYI');
+              continue;
+            case 't':
+              throw new Error('NYI');
+              continue;
+              
+            case 'C':
+              throw new Error('NYI');
+              break;
+            case 'c':
+              throw new Error('NYI');
+              break;
+            case 'Q':
+              throw new Error('NYI');
+              break;
+            case 'q':
+              throw new Error('NYI');
+              break;
+            
+            case 'M':
+              x0 = step.values[0];
+              y0 = step.values[1];
+              qx = cx = x = step.values[step.values.length-2];
+              qy = cy = y = step.values[step.values.length-1];
+              break;
+            case 'm':
+              x0 = x += step.values[0];
+              y0 = y += step.values[1];
+              for (var i = 2; i < step.values.length; i += 2) {
+                x += step.values[i];
+                y += step.values[i+1];
+              }
+              qx = cx = x;
+              qy = cy = y;
+              break;
+            case 'Z':
+            case 'z':
+              qx = cx = x = x0;
+              qy = cy = y = y0;
+              break;
+            case 'L':
+              qx = cx = x = step.values[step.values.length-2];
+              qy = cy = y = step.values[step.values.length-1];
+              break;
+            case 'l':
+              for (var i = 0; i < step.values.length; i += 2) {
+                x += step.values[i];
+                y += step.values[i+1];
+              }
+              qx = cx = x;
+              qy = cy = y;
+              break;
+            case 'H':
+              qx = cx = x = step.values[step.values.length-1];
+              qy = cy = y;
+              break;
+            case 'h':
+              for (var i = 0; i < step.values.length; i++) {
+                x += step.values[i];
+              }
+              qx = cx = x;
+              qy = cy = y;
+              break;
+            case 'V':
+              qx = cx = x;
+              qy = cy = y = step.values[step.values.length-1];
+              break;
+            case 'v':
+              for (var i = 0; i < step.values.length; i++) {
+                y += step.values[i];
+              }
+              qx = cx = x;
+              qy = cy = y;
+              break;
+          }
+          yield step;
+        }
+      });
+      Object.defineProperty(this, 'asUnreflected', {
+        value: iter,
+      });
+      return iter;
     },
     get guaranteesBaseCommands() {
       if (typeof this.source === 'string') {
