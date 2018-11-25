@@ -10,6 +10,124 @@ define(function() {
       y1 + 2 * (qy - y1) / 3];
   }
   
+  const TAU = Math.PI * 2;
+
+  // code below based on a2c.js from svgpath lib (MIT License)
+  // <https://github.com/fontello/svgpath/blob/master/lib/a2c.js>
+  
+  function unitVectorAngle(ux, uy, vx, vy) {
+    var sign = (ux*vy - uy*vx < 0) ? -1 : 1;
+    var dot  = ux*vx + uy*vy;
+
+    // Add this to work with arbitrary vectors:
+    // dot /= Math.sqrt(ux * ux + uy * uy) * Math.sqrt(vx * vx + vy * vy);
+
+    // rounding errors, e.g. -1.0000000000000002 can screw up this
+    if (dot > 1) dot = 1;
+    else if (dot < -1) dot = -1;
+
+    return sign * Math.acos(dot);
+  }
+
+  function arcToCubic(x1,y1, rx,ry, phi, fa,fs, x2,y2) {
+    var sin_phi = Math.sin(phi * TAU / 360);
+    var cos_phi = Math.cos(phi * TAU / 360);
+    
+    var x1p =  cos_phi*(x1-x2)/2 + sin_phi*(y1-y2)/2;
+    var y1p = -sin_phi*(x1-x2)/2 + cos_phi*(y1-y2)/2;
+
+    if ((x1p === 0 && y1p === 0) || rx === 0 || ry === 0) {
+      return [x1,y1, x2,y2, x2,y2];
+    }
+
+    rx = Math.abs(rx);
+    ry = Math.abs(ry);
+
+    var lambda = (x1p * x1p) / (rx * rx)
+               + (y1p * y1p) / (ry * ry);
+
+    if (lambda > 1) {
+      lambda = Math.sqrt(lambda);
+      rx *= lambda;
+      ry *= lambda;
+    }
+
+    var rx_sq = rx * rx;
+    var ry_sq = ry * ry;
+    var x1p_sq = x1p * x1p;
+    var y1p_sq = y1p * y1p;
+
+    var radicant = ((rx_sq * ry_sq)
+                  - (rx_sq * y1p_sq)
+                  - (ry_sq * x1p_sq));
+
+    if (radicant < 0) {
+      // fix tiny negative rounding errors
+      radicant = 0;
+    }
+
+    radicant /= (rx_sq * y1p_sq) + (ry_sq * x1p_sq);
+    radicant = Math.sqrt(radicant) * (fa === fs ? -1 : 1);
+
+    var cxp = radicant *  rx/ry * y1p;
+    var cyp = radicant * -ry/rx * x1p;
+
+    var cx = cos_phi*cxp - sin_phi*cyp + (x1+x2)/2;
+    var cy = sin_phi*cxp + cos_phi*cyp + (y1+y2)/2;
+
+    var v1x =  (x1p - cxp) / rx;
+    var v1y =  (y1p - cyp) / ry;
+    var v2x = (-x1p - cxp) / rx;
+    var v2y = (-y1p - cyp) / ry;
+
+    var theta1 = unitVectorAngle(1, 0, v1x, v1y);
+    var delta_theta = unitVectorAngle(v1x, v1y, v2x, v2y);
+
+    if (fs === 0 && delta_theta > 0) {
+      delta_theta -= TAU;
+    }
+    if (fs === 1 && delta_theta < 0) {
+      delta_theta += TAU;
+    }
+
+    var result = [];
+
+    // Split an arc to multiple segments, so each segment
+    // will be less than 90deg
+    var segments = Math.max(Math.ceil(Math.abs(delta_theta) / (TAU / 4)), 1);
+    delta_theta /= segments;
+
+    for (var i = 0; i < segments; i++) {
+      var alpha = Math.tan(delta_theta/4) * 4 / 3;
+
+      var x1 = Math.cos(theta1);
+      var y1 = Math.sin(theta1);
+      var x2 = Math.cos(theta1 + delta_theta);
+      var y2 = Math.sin(theta1 + delta_theta);
+
+      result.push(
+        x1 - y1*alpha, y1 + x1*alpha,
+        x2 + y2*alpha, y2 - x2*alpha,
+        x2, y2);
+
+      theta1 += delta_theta;
+    }
+
+    for (var i = 0; i < result.length; i += 2) {
+      var x = result[i]*rx, y = result[i+1]*ry;
+
+      // rotate
+      var xp = cos_phi*x - sin_phi*y;
+      var yp = sin_phi*x + cos_phi*y;
+
+      // translate
+      curve[i] = xp + cx;
+      curve[i+1] = yp + cy;
+    }
+
+    return result;
+  }
+  
   function splitPathSegments(str) {
     return str.match(/m[^m]*/gi);
   }
@@ -509,8 +627,30 @@ define(function() {
             case 't':
               break;
             case 'A':
+              var x = state.x, y = state.y;
+              for (var i = 0; i < step.values.length; i += 7) {
+                var nx = step.values[i+5], ny = step.values[i+6];
+                var cubicValues = arcToCubic(
+                  x, y,
+                  step.values[i], step.values[i+1], step.values[i+2], step.values[i+3], step.values[i+4],
+                  nx, ny);
+                for (var j = 0; j < cubicValues.length; j += 6) {
+                  yield {type:'C', values:cubicValues.slice(j, j+6)};
+                }
+                x = nx;
+                y = ny;
+              }
               break;
             case 'a':
+              for (var i = 0; i < step.values.length; i += 7) {
+                var cubicValues = arcToCubic(
+                  0, 0,
+                  step.values[i], step.values[i+1], step.values[i+2], step.values[i+3], step.values[i+4],
+                  step.values[i+5], step.values[i+6]);
+                for (var j = 0; j < cubicValues.length; j += 6) {
+                  yield {type:'c', values:cubicValues.slice(j, j+6)};
+                }
+              }
               break;
             default:
               yield step;
