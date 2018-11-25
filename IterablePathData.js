@@ -359,7 +359,7 @@ define(function() {
       this[Symbol.iterator] = source;
       Object.defineProperty(this, 'source', PROP_SELF);
     }
-    else if (Symbol.iterator in source) {
+    else if (typeof source === 'string' || Symbol.iterator in source) {
       this.source = source;
     }
     else {
