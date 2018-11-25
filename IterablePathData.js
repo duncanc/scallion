@@ -2,12 +2,12 @@ define(function() {
 
   'use strict';
   
-  function quadraticToCubic(x0,y0, qx,qy, x1,y1) {
+  function quadraticToCubic(x1,y1, qx,qy, x2,y2) {
     return [
-      x0 + 2 * (qx - x0) / 3,
-      y0 + 2 * (qy - y0) / 3,
-      x1 + 2 * (qx - x1) / 3,
-      y1 + 2 * (qy - y1) / 3];
+      x1 + (qx - x1) * 2 / 3,
+      y1 + (qy - y1) * 2 / 3,
+      x2 + (qx - x2) * 2 / 3,
+      y2 + (qy - y2) * 2 / 3];
   }
   
   const TAU = Math.PI * 2;
