@@ -623,8 +623,40 @@ define(function() {
               yield {type:'c', values:newValues};
               break;
             case 'T':
+              var x = state.x, y = state.y, qx = state.qx, qy = state.qy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                var nx = step.values[i], ny = step.values[i+1];
+                qx = nx + nx - qx;
+                qy = ny + ny - qx;
+                var controls = quadraticToCubic(
+                  x, y,
+                  qx, qy,
+                  nx, ny);
+                newValues.push(
+                  controls[0], controls[1],
+                  controls[2], controls[3],
+                  x = nx, y = ny);
+              }
+              yield {type:'C', values:newValues};
               break;
             case 't':
+              var dqx = state.x - state.qx, dqy = state.y - state.qy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                var dx = step.values[i], dy = step.values[i+1];
+                var controls = quadraticToCubic(
+                  0, 0,
+                  dqx, dqy,
+                  dx, dy);
+                newValues.push(
+                  controls[0], controls[1],
+                  controls[2], controls[3],
+                  dx, dy);
+                dqx = dx - dqx;
+                dqy = dy - dqy;
+              }
+              yield {type:'c', values:newValues};
               break;
             case 'A':
               var x = state.x, y = state.y;
