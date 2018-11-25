@@ -727,6 +727,28 @@ define(function() {
                 values: newValues,
               };
               break;
+            case 'h':
+              var x = state.x;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i++) {
+                newValues.push(x += step.values[i]);
+              }
+              yield {
+                type: 'H',
+                values: newValues,
+              };
+              break;
+            case 'v':
+              var y = state.y;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i++) {
+                newValues.push(y += step.values[i]);
+              }
+              yield {
+                type: 'V',
+                values: newValues,
+              };
+              break;
             case 'q':
               var x = state.x, y = state.y;
               var newValues = [];
