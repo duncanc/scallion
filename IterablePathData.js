@@ -489,6 +489,20 @@ define(function() {
               yield {type:'C', values:newValues};
               break;
             case 'q':
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 4) {
+                var qx = step.values[i], qy = step.values[i+1];
+                var nx = step.values[i+2], ny = step.values[i+3];
+                var controls = quadraticToCubic(
+                  0, 0,
+                  qx, qy,
+                  nx, ny);
+                newValues.push(
+                  controls[0], controls[1],
+                  controls[2], controls[3],
+                  nx, ny);
+              }
+              yield {type:'c', values:newValues};
               break;
             case 'T':
               break;
