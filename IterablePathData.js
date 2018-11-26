@@ -752,7 +752,7 @@ define(function() {
             case 'q':
               var x = state.x, y = state.y;
               var newValues = [];
-              for (var i = 0; i < step.values.length; i += 2) {
+              for (var i = 0; i < step.values.length; i += 4) {
                 newValues.push(
                   x + step.values[i],
                   y + step.values[i+1]);
