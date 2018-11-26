@@ -674,14 +674,18 @@ define(function() {
               }
               break;
             case 'a':
+              var x = state.x, y = state.y;
               for (var i = 0; i < step.values.length; i += 7) {
+                var nx = step.values[i+5], ny = step.values[i+6];
                 var cubicValues = arcToCubic(
-                  0, 0,
+                  x, y,
                   step.values[i], step.values[i+1], step.values[i+2], step.values[i+3], step.values[i+4],
-                  step.values[i+5], step.values[i+6]);
+                  x + nx, x + ny);
                 for (var j = 0; j < cubicValues.length; j += 6) {
-                  yield {type:'c', values:cubicValues.slice(j, j+6)};
+                  yield {type:'C', values:cubicValues.slice(j, j+6)};
                 }
+                x += nx;
+                y += ny;
               }
               break;
             default:
