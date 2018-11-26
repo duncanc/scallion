@@ -121,8 +121,8 @@ define(function() {
       var yp = sin_phi*x + cos_phi*y;
 
       // translate
-      curve[i] = xp + cx;
-      curve[i+1] = yp + cy;
+      result[i] = xp + cx;
+      result[i+1] = yp + cy;
     }
 
     return result;
