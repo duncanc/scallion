@@ -205,6 +205,28 @@ define(function() {
     get: function(){ return this; },
   };
   
+  function getPointOnCubicCurve(x1,y1, c1x,c1y, c2x,c2y, x2,y2, ratio) {
+    const nratio = 1 - ratio;
+    
+    const Ax = nratio*x1 + ratio*c1x,
+          Ay = nratio*y1 + ratio*c1y,
+          Bx = nratio*c1x + ratio*c2x,
+          By = nratio*c1y + ratio*c2y,
+          Cx = nratio*c2x + ratio*x2,
+          Cy = nratio*c2y + ratio*y2;
+
+    const Dx = nratio*Ax + ratio*Bx,
+          Dy = nratio*Ay + ratio*By;
+
+    const Ex = nratio*Bx + ratio*Cx,
+          Ey = nratio*By + ratio*Cy;
+
+    const Px = nratio*Dx + ratio*Ex,
+          Py = nratio*Dy + ratio*Ey;
+    
+    return {x:Px, y:Py};
+  }
+  
   function PathState() {
   }
   PathState.prototype = {
