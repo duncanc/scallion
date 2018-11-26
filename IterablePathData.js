@@ -680,7 +680,7 @@ define(function() {
                 var cubicValues = arcToCubic(
                   x, y,
                   step.values[i], step.values[i+1], step.values[i+2], step.values[i+3], step.values[i+4],
-                  x + nx, x + ny);
+                  x + nx, y + ny);
                 for (var j = 0; j < cubicValues.length; j += 6) {
                   yield {type:'C', values:cubicValues.slice(j, j+6)};
                 }
