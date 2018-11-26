@@ -112,8 +112,8 @@ define(function() {
 
       theta1 += delta_theta;
     }
-
-    for (var i = 0; i < result.length; i += 2) {
+    
+    for (var i = result.length - 4; i >= 0; i -= 2) {
       var x = result[i]*rx, y = result[i+1]*ry;
 
       // rotate
@@ -124,6 +124,8 @@ define(function() {
       result[i] = xp + cx;
       result[i+1] = yp + cy;
     }
+    
+    result.splice(-2, 2, x2, y2);
 
     return result;
   }
