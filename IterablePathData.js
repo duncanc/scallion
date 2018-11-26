@@ -100,15 +100,15 @@ define(function() {
     for (var i = 0; i < segments; i++) {
       var alpha = Math.tan(delta_theta/4) * 4 / 3;
 
-      var x1 = Math.cos(theta1);
-      var y1 = Math.sin(theta1);
-      var x2 = Math.cos(theta1 + delta_theta);
-      var y2 = Math.sin(theta1 + delta_theta);
+      var ox1 = Math.cos(theta1);
+      var oy1 = Math.sin(theta1);
+      var ox2 = Math.cos(theta1 + delta_theta);
+      var oy2 = Math.sin(theta1 + delta_theta);
 
       result.push(
-        x1 - y1*alpha, y1 + x1*alpha,
-        x2 + y2*alpha, y2 - x2*alpha,
-        x2, y2);
+        ox1 - oy1*alpha, oy1 + ox1*alpha,
+        ox2 + oy2*alpha, oy2 - ox2*alpha,
+        ox2, oy2);
 
       theta1 += delta_theta;
     }
