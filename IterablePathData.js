@@ -588,7 +588,7 @@ define(function() {
       for (var step of this.source) {
         buf.push(step.type + step.values.join(' '));
       }
-      return buf.join('');
+      return buf.join(' ');
     },
     get guaranteesOneSegment() {
       if (typeof this.source === 'string') {
