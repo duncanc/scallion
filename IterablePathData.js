@@ -586,7 +586,7 @@ define(function() {
       }
       var buf = [];
       for (var step of this.source) {
-        buf.push(step.type + step.values.join(' '));
+        buf.push(step.type + (step.values || []).join(' '));
       }
       return buf.join(' ');
     },
@@ -1003,7 +1003,7 @@ define(function() {
               yield {type:'A', values:newValues};
               break;
             case 'z':
-              yield {type:'Z'};
+              yield {type:'Z', values:[]};
               break;
             default:
               yield step;
@@ -1093,7 +1093,7 @@ define(function() {
         this.cx - this.rx, this.cy - RADIUS_RATIO * this.ry,
         this.cx - RADIUS_RATIO * this.rx, this.cy - this.ry,
         this.cx, this.cy - this.ry]};
-      yield {type:'Z'};
+      yield {type:'Z', values:[]};
     },
   });
   
@@ -1124,7 +1124,7 @@ define(function() {
         yield {type:'L', values:[this.x + this.width, this.y]};
         yield {type:'L', values:[this.x + this.width, this.y + this.height]};
         yield {type:'L', values:[this.x, this.y + this.height]};
-        yield {type:'Z'};
+        yield {type:'Z', values:[]};
       }
       else {
         yield {type:'M', values:[this.x, this.y + this.ry]};
@@ -1147,7 +1147,7 @@ define(function() {
           this.x + this.rx * RADIUS_RATIO_INV, this.y + this.height,
           this.x, this.y + this.height - RADIUS_RATIO_INV * this.ry,
           this.x, this.y + this.height - this.ry]};
-        yield {type:'Z'};
+        yield {type:'Z', values:[]};
       }
     },
   });
