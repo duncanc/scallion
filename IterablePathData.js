@@ -1045,6 +1045,66 @@ define(function() {
     },
   };
   
+  const RADIUS_RATIO = 0.552284749831;
+  const RADIUS_RATIO_INV = 1 - RADIUS_RATIO;
+  
+  function Rect(x,y,width,height) {
+    if (!isNaN(x)) this.x = x;
+    if (!isNaN(y)) this.y = y;
+    if (!isNaN(width)) this.width = width;
+    if (!isNaN(height)) this.height = height;
+  }
+  Rect.prototype = Object.create(IterablePathData.prototype, {
+    guaranteesOneSegment: {value:true},
+    guaranteesCubicOnly: {value:true},
+    guaranteesAbsolute: {value:true},
+    guaranteesSimpleParams: {value:true},
+    guaranteesUnreflected: {value:true},
+    source: PROP_SELF,
+  });
+  Object.assign(Rect.prototype, {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    rx: 0,
+    ry: 0,
+    [Symbol.iterator]: function*() {
+      if (this.rx === 0 && this.ry === 0) {
+        yield {type:'M', values:[this.x, this.y]};
+        yield {type:'L', values:[this.x + this.width, this.y]};
+        yield {type:'L', values:[this.x + this.width, this.y + this.height]};
+        yield {type:'L', values:[this.x, this.y + this.height]};
+        yield {type:'Z'};
+      }
+      else {
+        yield {type:'M', values:[this.x, this.y + this.ry]};
+        yield {type:'C', values:[
+          this.x, this.y + RADIUS_RATIO_INV * this.ry,
+          this.x + RADIUS_RATIO_INV * this.rx, this.y,
+          this.x + this.rx, this.y]};
+        yield {type:'L', values:[this.x + this.width - this.rx, this.y]};
+        yield {type:'C', values:[
+          this.x + this.width - RADIUS_RATIO_INV * this.rx, this.y,
+          this.x + this.width, this.y + RADIUS_RATIO_INV * this.ry,
+          this.x + this.width, this.y + this.ry]};
+        yield {type:'L', values:[this.x + this.width, this.y + this.height - this.ry]};
+        yield {type:'C', values:[
+          this.x + this.width, this.y + this.height - RADIUS_RATIO_INV * this.ry,
+          this.x + this.width - RADIUS_RATIO_INV * this.rx, this.y + this.height,
+          this.x + this.width - this.rx, this.y + this.height]};
+        yield {type:'L', values:[this.x + this.rx, this.y + this.height]};
+        yield {type:'C', values:[
+          this.x + this.rx * RADIUS_RATIO_INV, this.y + this.height,
+          this.x, this.y + this.height - RADIUS_RATIO_INV * this.ry,
+          this.x, this.y + this.height - this.ry]};
+        yield {type:'Z'};
+      }
+    },
+  });
+  
+  IterablePathData.Rect = Rect;
+  
   return IterablePathData;
 
 });
