@@ -1052,7 +1052,7 @@ define(function() {
     this.cx = cx;
     this.cy = cy;
     this.rx = rx;
-    this.ry = ry;
+    this.ry = isNaN(ry) ? rx : ry;
   }
   Ellipse.prototype = Object.create(IterablePathData.prototype, {
     guaranteesOneSegment: {value:true},
@@ -1061,6 +1061,14 @@ define(function() {
     guaranteesSimpleParams: {value:true},
     guaranteesUnreflected: {value:true},
     source: PROP_SELF,
+    r: {
+      get: function() {
+        return this.rx === this.ry ? this.rx : NaN;
+      },
+      set: function(v) {
+        this.rx = this.ry = v;
+      },
+    },
   });
   Object.assign(Ellipse.prototype, {
     cx: 0,
