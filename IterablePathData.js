@@ -1153,6 +1153,7 @@ define(function() {
   });
   
   IterablePathData.Rect = Rect;
+  IterablePathData.Ellipse = Ellipse;
   
   return IterablePathData;
 
