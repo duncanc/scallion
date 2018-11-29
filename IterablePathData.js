@@ -1048,11 +1048,52 @@ define(function() {
   const RADIUS_RATIO = 0.552284749831;
   const RADIUS_RATIO_INV = 1 - RADIUS_RATIO;
   
+  function Ellipse(cx,cy, rx,ry) {
+    this.cx = cx;
+    this.cy = cy;
+    this.rx = rx;
+    this.ry = ry;
+  }
+  Ellipse.prototype = Object.create(IterablePathData.prototype, {
+    guaranteesOneSegment: {value:true},
+    guaranteesCubicOnly: {value:true},
+    guaranteesAbsolute: {value:true},
+    guaranteesSimpleParams: {value:true},
+    guaranteesUnreflected: {value:true},
+    source: PROP_SELF,
+  });
+  Object.assign(Ellipse.prototype, {
+    cx: 0,
+    cy: 0,
+    rx: 0,
+    ry: 0,
+    [Symbol.iterator]: function*() {
+      yield {type:'M', values:[this.cx, this.cy - this.ry]};
+      yield {type:'C', values:[
+        this.cx + RADIUS_RATIO * this.rx, this.cy - this.ry,
+        this.cx + this.rx, this.cy - RADIUS_RATIO * this.ry,
+        this.cx + this.rx, this.cy]};
+      yield {type:'C', values:[
+        this.cx + this.rx, this.cy + RADIUS_RATIO * this.ry,
+        this.cx + RADIUS_RATIO * this.rx, this.cy + this.ry,
+        this.cx, this.cy + this.ry]};
+      yield {type:'C', values:[
+        this.cx - RADIUS_RATIO * this.rx, this.cy + this.ry,
+        this.cx - this.rx, this.cy + RADIUS_RATIO * this.ry,
+        this.cx - this.rx, this.cy]};
+      yield {type:'C', values:[
+        this.cx - this.rx, this.cy - RADIUS_RATIO * this.ry,
+        this.cx - RADIUS_RATIO * this.rx, this.cy - this.ry,
+        this.cx, this.cy - this.ry]};
+      yield {type:'Z'};
+    },
+  });
+  
   function Rect(x,y,width,height) {
-    if (!isNaN(x)) this.x = x;
-    if (!isNaN(y)) this.y = y;
-    if (!isNaN(width)) this.width = width;
-    if (!isNaN(height)) this.height = height;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
   }
   Rect.prototype = Object.create(IterablePathData.prototype, {
     guaranteesOneSegment: {value:true},
