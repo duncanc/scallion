@@ -697,91 +697,6 @@ define(function() {
       });
       return iter;
     },
-    get guaranteesUnreflected() {
-      if (typeof this.source === 'string') {
-        return !/[st]/i.test(this.source);
-      }
-      return false;
-    },
-    get asUnreflected() {
-      if (this.guaranteesUnreflected) return this;
-      const source = this;
-      var iter = new IterablePathData(function*() {
-        var state = new PathState;
-        for (var step of source) {
-          switch (step.type) {
-            case 'S':
-              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i += 4) {
-                newValues.push(x + x-cx, y + y-cy);
-                newValues.push(
-                  cx = step.values[i],
-                  cy = step.values[i+1],
-                  x = step.values[i+2],
-                  y = step.values[i+3]);
-              }
-              yield {type:'C', values:newValues};
-              break;
-            case 's':
-              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i += 4) {
-                newValues.push(
-                  x - cx,
-                  y - cy,
-                  step.values[i],
-                  step.values[i+1],
-                  step.values[i+2],
-                  step.values[i+3]);
-                cx = x + step.values[i];
-                cy = y + step.values[i+1];
-                x += step.values[i+2];
-                y += step.values[i+3];
-              }
-              yield {type:'c', values:newValues};
-              break;
-            case 'T':
-              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i += 2) {
-                newValues.push(
-                  qx = x + x - qx,
-                  qy = y + y - qy);
-                newValues.push(
-                  x = step.values[i],
-                  y = step.values[i+1]);
-              }
-              yield {type:'Q', values:newValues};
-              break;
-            case 't':
-              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
-              var newValues = [];
-              for (var i = 0; i < step.values.length; i += 2) {
-                newValues.push(
-                  x - qx,
-                  y - qy,
-                  step.values[i],
-                  step.values[i+1]);
-                qx = x + x - qx;
-                qy = y + y - qy;
-                x += step.values[0];
-                y += step.values[1];
-              }
-              yield {type:'q', values:newValues};
-              break;
-            default:
-              yield step;
-              break;
-          }
-          state.update(step);
-        }
-      });
-      Object.defineProperty(this, 'asUnreflected', {
-        value: iter,
-      });
-      return iter;
-    },
     get guaranteesCubicOnly() {
       if (typeof this.source === 'string') {
         return !/[aqt]/i.test(this.source);
@@ -911,7 +826,7 @@ define(function() {
     },
     get guaranteesAbsolute() {
       if (typeof this.source === 'string') {
-        return !/[a-z]/.test(this.source);
+        return !/[a-zHVST]/.test(this.source);
       }
       return false;
     },
@@ -922,9 +837,61 @@ define(function() {
         var state = new PathState;
         for (var step of self) {
           switch (step.type) {
+            case 'S':
+              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 4) {
+                newValues.push(x + x-cx, y + y-cy);
+                newValues.push(
+                  cx = step.values[i],
+                  cy = step.values[i+1],
+                  x = step.values[i+2],
+                  y = step.values[i+3]);
+              }
+              yield {type:'C', values:newValues};
+              break;
+            case 's':
+              var x=state.x, y=state.y, cx=state.cx, cy=state.cy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 4) {
+                newValues.push(x + x-cx, y + y-cy);
+                newValues.push(
+                  cx = x + step.values[i],
+                  cy = y + step.values[i+1]);
+                newValues.push(
+                  x += step.values[i+2],
+                  y += step.values[i+3]);
+              }
+              yield {type:'C', values:newValues};
+              break;
+            case 'T':
+              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                newValues.push(
+                  qx = x + x - qx,
+                  qy = y + y - qy);
+                newValues.push(
+                  x = step.values[i],
+                  y = step.values[i+1]);
+              }
+              yield {type:'Q', values:newValues};
+              break;
+            case 't':
+              var x=state.x, y=state.y, qx=state.qx, qy=state.qy;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i += 2) {
+                newValues.push(
+                  qx = x + x-qx,
+                  qy = y + y-qy);
+                newValues.push(
+                  x += step.values[i],
+                  y += step.values[i+1]);
+              }
+              yield {type:'Q', values:newValues};
+              break;
             case 'l':
             case 'm':
-            case 't':
               var x = state.x, y = state.y;
               var newValues = [];
               for (var i = 0; i < step.values.length; i += 2) {
@@ -937,25 +904,47 @@ define(function() {
                 values: newValues,
               };
               break;
+            case 'H':
+              var y = state.y;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i++) {
+                newValues.push(step.values[i], y);
+              }
+              yield {
+                type: 'L',
+                values: newValues,
+              };
+              break;
             case 'h':
+              var x = state.x, y = state.y;
+              var newValues = [];
+              for (var i = 0; i < step.values.length; i++) {
+                newValues.push(x += step.values[i], y);
+              }
+              yield {
+                type: 'L',
+                values: newValues,
+              };
+              break;
+            case 'V':
               var x = state.x;
               var newValues = [];
               for (var i = 0; i < step.values.length; i++) {
-                newValues.push(x += step.values[i]);
+                newValues.push(x, step.values[i]);
               }
               yield {
-                type: 'H',
+                type: 'L',
                 values: newValues,
               };
               break;
             case 'v':
-              var y = state.y;
+              var x = state.x, y = state.y;
               var newValues = [];
               for (var i = 0; i < step.values.length; i++) {
-                newValues.push(y += step.values[i]);
+                newValues.push(x, y += step.values[i]);
               }
               yield {
-                type: 'V',
+                type: 'L',
                 values: newValues,
               };
               break;
@@ -1021,7 +1010,7 @@ define(function() {
       return iter;
     },
     get asNormalized() {
-      return this.asSimpleParams.asAbsolute.asCubicOnly.asUnreflected;
+      return this.asSimpleParams.asAbsolute.asCubicOnly;
     },
     flatten: function(options) {
       const self = this.asNormalized;
@@ -1043,6 +1032,96 @@ define(function() {
         }
       });
     },
+    translated: function(x, y) {
+      if (x === 0 && y === 0) return this;
+      const self = this;
+      return new IterablePathData(function*() {
+        var firstMove = true;
+        for (var step of self) switch (step.type) {
+          case 'm':
+            if (firstMove) {
+              firstMove = false;
+              var newValues = step.values.slice();
+              newValues[0] += x;
+              newValues[1] += y;
+              yield {type:'m', values:newValues};
+            }
+            else {
+              yield step;
+            }
+            continue;
+          case 'M':
+            firstMove = false;
+            var newValues = step.values.slice();
+            for (var i = 0; i < newValues.length; i += 2) {
+              newValues[i] += x;
+              newValues[i+1] += y;
+            }
+            yield {type:'M', values:newValues};
+            continue;
+          case 'L': case 'C': case 'S': case 'T': case 'Q':
+            var newValues = step.values.slice();
+            for (var i = 0; i < newValues.length; i += 2) {
+              newValues[i] += x;
+              newValues[i+1] += y;
+            }
+            yield {type:step.type, values:newValues};
+            continue;
+          case 'H':
+            var newValues = step.values.slice();
+            for (var i = 0; i < newValues.length; i++) {
+              newValues[i] += x;
+            }
+            yield {type:'H', values:newValues};
+            continue;
+          case 'V':
+            var newValues = step.values.slice();
+            for (var i = 0; i < newValues.length; i++) {
+              newValues[i] += y;
+            }
+            yield {type:'V', values:newValues};
+            continue;
+          case 'A':
+            var newValues = step.values.slice();
+            for (var i = 0; i < newValues.length; i += 7) {
+              newValues[i+5] += x;
+              newValues[i+6] += y;
+            }
+            yield {type:'A', values:newValues};
+            continue;
+          default:
+            yield step;
+            continue;
+        }
+      });
+    },
+    scaled: function(x, y) {
+      return this.transformed(x, 0, 0, y, 0, 0);
+    },
+    transformed: function(a, b, c, d, e, f) {
+      if (a === 1 && b === 0 && c === 0 && d === 1) {
+        return this.translated(e, f);
+      }
+      const self = this.asAbsolute.asCubicOnly;
+      return new IterablePathData(function*() {
+        for (var step of self) switch (step.type) {
+          case 'M': case 'L': case 'C':
+            var newValues = [];
+            for (var i = 0; i < step.values.length; i += 2) {
+              newValues.push(
+                a*step.values[i] + c*step.values[i+1] + e,
+                b*step.values[i] + d*step.values[i+1] + f);
+            }
+            yield {type:step.type, values:newValues};
+            continue;
+          case 'Z':
+            yield step;
+            continue;
+          default:
+            throw new Error('unexpected step type: ' + step.type);
+        }
+      });
+    },
   };
   
   const RADIUS_RATIO = 0.552284749831;
@@ -1059,7 +1138,6 @@ define(function() {
     guaranteesCubicOnly: {value:true},
     guaranteesAbsolute: {value:true},
     guaranteesSimpleParams: {value:true},
-    guaranteesUnreflected: {value:true},
     source: PROP_SELF,
     r: {
       get: function() {
@@ -1108,7 +1186,6 @@ define(function() {
     guaranteesCubicOnly: {value:true},
     guaranteesAbsolute: {value:true},
     guaranteesSimpleParams: {value:true},
-    guaranteesUnreflected: {value:true},
     source: PROP_SELF,
   });
   Object.assign(Rect.prototype, {
