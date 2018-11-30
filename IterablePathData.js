@@ -10,8 +10,6 @@ define(function() {
       y2 + (qy - y2) * 2 / 3];
   }
   
-  const TAU = Math.PI * 2;
-
   // code below based on a2c.js from svgpath lib (MIT License)
   // <https://github.com/fontello/svgpath/blob/master/lib/a2c.js>
   
@@ -30,8 +28,8 @@ define(function() {
   }
 
   function arcToCubic(x1,y1, rx,ry, phi, fa,fs, x2,y2) {
-    var sin_phi = Math.sin(phi * TAU / 360);
-    var cos_phi = Math.cos(phi * TAU / 360);
+    var sin_phi = Math.sin(phi * Math.PI / 180);
+    var cos_phi = Math.cos(phi * Math.PI / 180);
     
     var x1p =  cos_phi*(x1-x2)/2 + sin_phi*(y1-y2)/2;
     var y1p = -sin_phi*(x1-x2)/2 + cos_phi*(y1-y2)/2;
@@ -84,17 +82,17 @@ define(function() {
     var delta_theta = unitVectorAngle(v1x, v1y, v2x, v2y);
 
     if (fs === 0 && delta_theta > 0) {
-      delta_theta -= TAU;
+      delta_theta -= Math.PI * 2;
     }
     if (fs === 1 && delta_theta < 0) {
-      delta_theta += TAU;
+      delta_theta += Math.PI * 2;
     }
 
     var result = [];
 
     // Split an arc to multiple segments, so each segment
     // will be less than 90deg
-    var segments = Math.max(Math.ceil(Math.abs(delta_theta) / (TAU / 4)), 1);
+    var segments = Math.max(Math.ceil(Math.abs(delta_theta) / (Math.PI / 2)), 1);
     delta_theta /= segments;
 
     for (var i = 0; i < segments; i++) {
