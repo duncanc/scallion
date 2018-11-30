@@ -1098,6 +1098,23 @@ define(function() {
     scaled: function(x, y) {
       return this.transformed(x, 0, 0, y, 0, 0);
     },
+    skewedX: function(deg) {
+      return this.transformed(1, 0, Math.tan(deg * Math.PI / 180), 1, 0, 0);
+    },
+    skewedY: function(deg) {
+      return this.transformed(1, Math.tan(deg * Math.PI / 180), 0, 1, 0, 0);
+    },
+    rotated: function(deg, x, y) {
+      x = x || 0;
+      y = y || 0;
+      const rad = deg * Math.PI / 180;
+      const sin = Math.sin(rad);
+      const cos = Math.cos(rad);
+      if (x === 0 && y === 0) {
+        return this.transformed(cos, sin, -sin, cos, 0, 0);
+      }
+      return this.transformed(cos, sin, -sin, cos, -x*cos + x + y*sin, -x*sin - y*cos + y);
+    },
     transformed: function(a, b, c, d, e, f) {
       if (a === 1 && b === 0 && c === 0 && d === 1) {
         return this.translated(e, f);
