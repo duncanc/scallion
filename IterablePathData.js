@@ -225,6 +225,64 @@ define(function() {
     return {x:Px, y:Py};
   }
   
+  function intersectionRatios(ax1,ay1,ax2,ay2, bx1,by1,bx2,by2) {
+    const denom = (by2 - by1)*(ax2 - ax1) - (bx2 - bx1)*(ay2 - ay1);
+    return (denom === 0) ? null : [
+      ((bx2 - bx1)*(ay1 - by1) - (by2 - by1)*(ax1 - bx1)) / denom,
+      ((ax2 - ax1)*(ay1 - by1) - (ay2 - ay1)*(ax1 - bx1)) / denom,
+    ];
+  }
+  
+  function intersectionPosition(ax1,ay1,ax2,ay2, bx1,by1,bx2,by2) {
+    const denom = (by2 - by1)*(ax2 - ax1) - (bx2 - bx1)*(ay2 - ay1);
+    if (denom === 0) return null;
+    const aRatio = (bx2 - bx1)*(ay1 - by1) - (by2 - by1)*(ax1 - bx1);
+    return {
+      x: ax1 + aRatio * (ax2 - ax1) / denom,
+      y: ay1 + aRatio * (ay2 - ay1) / denom,
+    };
+  }
+  
+  function twoPointPerspectiveTransformFactory(
+    srcX, srcY, srcWidth, srcHeight,
+    // "near"/"far" relative to the two vanishing points
+    nearFarX, nearFarY,
+    nearNearX, nearNearY,
+    farNearX, farNearY,
+    farFarX, farFarY
+  ) {
+    const vanish1 = intersectionPosition(
+      farFarX, farFarY, nearFarX, nearFarY,
+      farNearX, farNearY, nearNearX, nearNearY);
+    const vanish2 = intersectionPosition(
+      farFarX, farFarY, farNearX, farNearY,
+      nearFarX, nearFarY, nearNearX, nearNearY);
+    if (!vanish1 || !vanish2) throw new Error('invalid shape for two point perspective');
+    const p2x = farFarX + (vanish2.x - vanish1.x), p2y = farFarY + (vanish2.y - vanish1.y);
+    const xOff = intersectionPosition(
+      farFarX,farFarY, p2x,p2y,
+      vanish1.x,vanish1.y, nearNearX,nearNearY);
+    const yOff = intersectionPosition(
+      farFarX,farFarY, p2x,p2y,
+      vanish2.x,vanish2.y, nearNearX,nearNearY);
+    const xox = farFarX, xoy = farFarY, yox = yOff.x, yoy = yOff.y;
+    const xoxd = xOff.x - farFarX, xoyd = xOff.y - farFarY;
+    const yoxd = farFarX - yOff.x, yoyd = farFarY - yOff.y;
+    return function(x, y) {
+      x -= srcX;
+      y -= srcY;
+      return intersectionPosition(
+        xox + xoxd * x / srcWidth,
+        xoy + xoyd * x / srcWidth,
+        vanish1.x,
+        vanish1.y,
+        yox + yoxd * y / srcHeight,
+        yoy + yoyd * y / srcHeight,
+        vanish2.x,
+        vanish2.y);
+    };
+  }
+  
   // curve flattening code below adapted from
   // Anti-Grain Geometry 2.4 by Maxim Shemanarev
   // (Modified BSD License)
