@@ -243,6 +243,45 @@ define(function() {
     };
   }
   
+  function onePointPerspectiveTransformFactory(
+      srcX,srcY,srcWidth,srcHeight,
+      nearX1,nearY1, nearX2,nearY2,
+      farX1,farY1, farX2,farY2) {
+    var vanishPoint = intersectionPosition(
+      farX1,farY1, nearX1,nearY1,
+      farX2,farY2, nearX2,nearY2);
+    if (!vanishPoint) {
+      throw new Error('invalid perspective');
+    }
+    var distancePoint = intersectionPosition(
+      vanishPoint.x,
+      vanishPoint.y,
+      vanishPoint.x + nearX2 - nearX1,
+      vanishPoint.y + nearY2 - nearY1,
+      farX1,
+      farY1,
+      nearX2,
+      nearY2);
+    return function(x, y) {
+      x -= srcX;
+      y -= srcY;
+      const d2x = farX1 + (farX2 - farX1) * y / srcHeight;
+      const d2y = farY1 + (farY2 - farY1) * y / srcHeight;
+      const dp = intersectionPosition(
+        d2x,d2y, distancePoint.x, distancePoint.y,
+        farX2,farY2, nearX2, nearY2);
+      return intersectionPosition(
+        dp.x,
+        dp.y,
+        dp.x + nearX2 - nearY1,
+        dp.y + nearY2 - nearY1,
+        farX1 + x * (farX2 - farX1) / srcWidth,
+        farY1 + x * (farY2 - farY1) / srcWidth,
+        vanishPoint.x,
+        vanishPoint.y);
+    };
+  }
+  
   function twoPointPerspectiveTransformFactory(
     srcX, srcY, srcWidth, srcHeight,
     // "near"/"far" relative to the two vanishing points
